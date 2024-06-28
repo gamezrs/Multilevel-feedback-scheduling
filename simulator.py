@@ -2,17 +2,6 @@
 import sys
 import argparse
 
-# Variables
-
-PROCESS_TIME = 2
-
-QUEUES: list[list] = []
-QUANTUM: list[int] = []
-PROCESS_LIST_FILE = ""
-LOG_FILE = ""
-OUTPUT_FILE_FORMAT = ""
-OUTPUT_FILE = ""
-
 # Logic
 
 def import_tasks_from_file(filepath: str):
@@ -35,18 +24,6 @@ def import_tasks_from_file(filepath: str):
     
     return tasks
 
-
-def schedule_tasks(tasks: list):
-    """
-    Loads task list into queues
-    """
-    pass
-
-def start_queue_processing():
-    """
-    Initializes the queue
-    """
-    pass
 
 def process_queues(tasks: list):
     """
@@ -116,13 +93,6 @@ def move_task_to_end_of_queue(queue_id: int):
     next_queue.append(task) # Readd the task to the end of the next queue
 
 
-def get_next_scheduled_task():
-    """
-    Returns the next scheduled task
-    """
-    pass
-
-
 def add_log(text: str):
     """
     Adding log entries to console and log file
@@ -138,15 +108,19 @@ def add_log(text: str):
 # Main method
 
 def main(args):
-    queues = args.queues
-    quantum = args.quantum
-    
-    for i in range(queues):
-        QUEUES.append([])
-
+    global QUEUES
     global QUANTUM
-    QUANTUM = quantum
+    global PROCESS_LIST_FILE
+    global LOG_FILE
+    global OUTPUT_FILE_FORMAT
+    global OUTPUT_FILE
 
+    QUEUES = []
+    
+    for i in range(args.queues):
+        QUEUES.append([])
+    
+    QUANTUM = args.quantum
     PROCESS_LIST_FILE = args.processlistfile
     LOG_FILE = args.logfile
     OUTPUT_FILE_FORMAT = args.outputformat
