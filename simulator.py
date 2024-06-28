@@ -89,6 +89,9 @@ def process_queues(tasks: list):
 
 
 def is_every_queue_empty():
+    """
+    Checks whether or not every queue is empty
+    """
     for queue in QUEUES: # Loop through all queues
         if len(queue) > 0: # Check if a non empty queue is found
             return False # return false because not every queue is empty
@@ -97,6 +100,9 @@ def is_every_queue_empty():
 
 
 def move_task_to_end_of_queue(queue_id: int):
+    """
+    Moves the first task of a queue to a lower priority queue if there is one, readds it to the end of the current queue if there is no lower priority queue
+    """
     queue = QUEUES[queue_id] # Get the queue that the task is from
 
     if len(QUEUES) == queue_id + 1: # Check if the current queue is the one with the lowest priority
