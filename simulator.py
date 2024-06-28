@@ -81,7 +81,7 @@ def process_queues(tasks: list):
                     break # Abort the Loop and start from the beginning, this task has finished
 
                 if task[3] == quantum: # Check if the task has used up his time in the current quantum
-                    move_task_to_end_of_queue(queue) # Move task to the end of the current queue
+                    move_task_to_end_of_queue(queue_id) # Move task to the end of the current queue
                     add_log(f"  Task {task[0]} in Queue {queue_id} has exceeded the time quantum, moving it to the end of the queue!")
                 
                 break # Abort the Loop and start from the beginning, a time unit has passed
@@ -96,11 +96,18 @@ def is_every_queue_empty():
     return True # No queue has a task in them, every queue is empty
 
 
-def move_task_to_end_of_queue(queue: list):
+def move_task_to_end_of_queue(queue_id: int):
+    queue = QUEUES[queue_id] # Get the queue that the task is from
+
+    if len(QUEUES) == queue_id + 1: # Check if the current queue is the one with the lowest priority
+        next_queue = QUEUES[queue_id] # Get the current queue, as there is no lower priority queue
+    else: # There is a lower priority queue
+        next_queue = QUEUES[queue_id + 1] # Get the next lowest priority queue
+
     task = queue.pop(0) # Remove the first task from the queue
     if len(task) == 4: # Check if the task still has a time quantum
         del task[3] # Remove the time quantum
-    queue.append(task) # Readd the task to the end of the queue
+    next_queue.append(task) # Readd the task to the end of the next queue
 
 
 def get_next_scheduled_task():
