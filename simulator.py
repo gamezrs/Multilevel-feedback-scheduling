@@ -4,8 +4,11 @@ import argparse
 
 # Variables
 
-QUEUES = []
-QUANTUM = []
+TIME = 0
+PROCESS_TIME = 2
+
+QUEUES: list[list] = []
+QUANTUM: list[int] = []
 PROCESS_LIST_FILE = ""
 LOG_FILE = ""
 OUTPUT_FILE_FORMAT = ""
@@ -29,9 +32,9 @@ def import_tasks_from_file(filepath: str):
     return tasks
 
 
-def schedule_tasks(tasks: dict):
+def schedule_tasks(tasks: list):
     """
-    Loads task dict into queues
+    Loads task list into queues
     """
     pass
 
@@ -41,10 +44,45 @@ def start_queue_processing():
     """
     pass
 
-def process_queues():
+def process_queues(tasks: list):
     """
     Processes the queues until every task is finished
     """
+    while not is_every_queue_empty():
+        TIME += 1
+
+        for task in tasks:
+            name = task[0]
+            runtime = task[1]
+            arrival = task[2]
+
+            # Check if a new process arrived
+            if arrival == TIME:
+                QUEUES[0].append(task)
+
+        for queue_id, queue in enumerate(QUEUES):
+            quantum = QUANTUM[queue_id]
+
+            if len(queue) > 0:
+                task = queue[0]
+
+                if not task[3]:
+                    task[3] = 0
+
+                task[1] -= 1 # decrease the remaining needed CPU time
+                task[3] += 1 # increase the time used in the current quantum
+
+                
+
+
+
+def is_every_queue_empty():
+    for queue in QUEUES:
+        if len(queue) > 0:
+            return False
+    
+    return True
+
 
 def get_next_scheduled_task():
     """
