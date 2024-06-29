@@ -1,26 +1,23 @@
 # Imports
 import argparse
 import pandas as pd
-import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-import datetime as dt
 
 # Task Class
 
 class Task:
     def __init__(self, name, runtime, arrivaltime):
-        self.name = name
-        self.needed_runtime = runtime
-        self.remaining_runtime = runtime
-        self.arrivaltime = arrivaltime
+        self.name = name # Name of the task
+        self.needed_runtime = runtime # Runtime from the task file
+        self.remaining_runtime = runtime # Remaining runtime, will be decreased by the scheduler
+        self.arrivaltime = arrivaltime # Arrivaltime from the task file
 
-        self.waittime = 0
-        self.real_runtime = 0
-        self.quantum = 0
+        self.waittime = 0 # Waittime, will be increased by the scheduler
+        self.real_runtime = 0 # The time that the task had the CPU, will be increased by the scheduler
+        self.quantum = 0 # The time used in the current quantum, will be increased by the scheduler
 
-        self.quantum_exceedings = []
-        self.finishtime = 0
+        self.quantum_exceedings = [] # All the times, that the task exceeded the time quantum
+        self.finishtime = 0 # The timepoint where the task has finished
 
 # Logic
 
@@ -28,17 +25,17 @@ def import_tasks_from_file(filepath: str):
     """
     Imports tasks from file and returns them as a list
     """
-    tasks: list[Task] = []
+    tasks: list[Task] = [] # Create a list to holds all imported tasks
 
-    with open(filepath) as file:
-        for line in file.readlines():
-            task_line = line.split(" ")
+    with open(filepath) as file: # Open the tasks file
+        for line in file.readlines(): # Loop through all lines in the task file
+            task_line = line.split(" ") # Split the line in to a list
 
-            if len(task_line) == 3:
-                task = Task(task_line[0], int(task_line[1]), int(task_line[2]))
-                tasks.append(task)
+            if len(task_line) == 3: # Check if the line has 3 seperate attributes
+                task = Task(task_line[0], int(task_line[1]), int(task_line[2])) # Create a new task
+                tasks.append(task) # Add the task to the list of all tasks
     
-    return tasks
+    return tasks # Return the list of tasks
 
 
 def process_queues(tasks: list):
@@ -123,13 +120,10 @@ def add_log(text: str):
     """
     Adding log entries to console and log file
     """
-    print(text)
+    print(text) # Log to the console
 
-    if LOG_FILE == "":
-        return
-
-    with open(LOG_FILE, "+a") as file:
-        file.write(text + "\n")
+    with open(LOG_FILE, "+a") as file: # Open the log file
+        file.write(text + "\n") # Write to the log file
 
 
 def output_simulation():
@@ -141,33 +135,34 @@ def output_simulation():
     average_real_runtime = 0
     average_waittime = 0
 
-    for task in FINISHED_TASKS:
-        average_real_runtime += task.real_runtime
-        average_waittime += task.waittime
+    for task in FINISHED_TASKS: # Loop through all finished tasks
+        average_real_runtime += task.real_runtime # Add the runtime of the task to the summed runtime
+        average_waittime += task.waittime # Add the waittime of the task to the summed waittime
 
-        text = text + f"{task.name} finished after running for {task.real_runtime}s with a waiting time of {task.waittime}s\n"
+        text = text + f"{task.name} finished after running for {task.real_runtime}s with a waiting time of {task.waittime}s\n" # Create the text line for the current task
     
-    average_real_runtime = average_real_runtime / len(FINISHED_TASKS)
-    average_waittime = average_waittime / len(FINISHED_TASKS)
+    average_real_runtime = average_real_runtime / len(FINISHED_TASKS) # Divide the summed runtime by the amount of tasks to get the average runtime
+    average_waittime = average_waittime / len(FINISHED_TASKS) # Divide the summed waittime by the amount of tasks to get the average waittime
 
-    text = text + f"\n\nAverage runtime: {average_real_runtime}s\nAverage waittime: {average_waittime}s"
+    text = text + f"\n\nAverage runtime: {average_real_runtime}s\nAverage waittime: {average_waittime}s" # Create the text line for the average runtime and average waittime
 
-    with open(OUTPUT_FILE, "+w") as file:
-        file.write(text)
+    with open(OUTPUT_FILE, "+w") as file: # Open the output file
+        file.write(text) # Write to the output file
+
 
 def output_gantt_chart():
     """
     Saves the output of the simulation to a gantt chart
     """
-    data = []
+    data = [] # Create a list to hold the necessary data of the tasks
 
-    for task in FINISHED_TASKS:
-        data.append(dict(task=task.name, start=task.arrivaltime, runtime=task.real_runtime))
+    for task in FINISHED_TASKS: # Loop through all finished tasks
+        data.append(dict(task=task.name, start=task.arrivaltime, runtime=task.real_runtime)) # Add the necessary data from the task to the data list
 
-    dataframe = pd.DataFrame(data)
+    dataframe = pd.DataFrame(data) # Create a panda dataframe
 
-    plt.barh(y=dataframe['task'], left=dataframe['start'], width=dataframe['runtime'])
-    plt.savefig(OUTPUT_IMAGE)
+    plt.barh(y=dataframe['task'], left=dataframe['start'], width=dataframe['runtime']) # Create a gantt chart with the runtime of the tasks
+    plt.savefig(OUTPUT_IMAGE) # Save the gantt chart to a png file
 
 # Main method
 
@@ -178,7 +173,6 @@ def main(args):
     global QUANTUM
     global PROCESS_LIST_FILE
     global LOG_FILE
-    global OUTPUT_FILE_FORMAT
     global OUTPUT_FILE
     global OUTPUT_IMAGE
 
@@ -186,21 +180,24 @@ def main(args):
     FINISHED_TASKS = []
     QUEUES = []
     
-    for i in range(args.queues):
+    for i in range(args.queues): # Add the defined amount of queues
         QUEUES.append([])
     
     QUANTUM = args.quantum
     PROCESS_LIST_FILE = args.processlistfile
     LOG_FILE = args.logfile
-    OUTPUT_FILE_FORMAT = args.outputformat
     OUTPUT_FILE = args.outputfile
     OUTPUT_IMAGE = args.outputimage
 
-    tasks = import_tasks_from_file(PROCESS_LIST_FILE)
+    if len(args.quantum) < args.queues: # Check if there are less quantums then there are queues
+        print("Not every queue has a quantum") # print an error message
+        return # Abort the program
 
-    process_queues(tasks)
-    output_simulation()
-    output_gantt_chart()
+    tasks = import_tasks_from_file(PROCESS_LIST_FILE) # Import the Tasks
+
+    process_queues(tasks) # Process the tasks
+    output_simulation() # Output the simulation to a text file
+    output_gantt_chart() # Output a gantt chart to a png file
 
 
 # Entrypoint
@@ -208,13 +205,12 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--queues", help="amount of queues", type=int)
-    parser.add_argument("--quantum", help="time quantum of queue in seconds, seperated by whitespace", type=int, nargs="+")
-    parser.add_argument("--processlistfile", help="path to the process list file for import")
-    parser.add_argument("--logfile", help="path to the log file")
-    parser.add_argument("--outputformat", help="output format (text, image)")
-    parser.add_argument("--outputfile", help="path to the output file of the simulation")
-    parser.add_argument("--outputimage", help="path to the output png image of the simulation")
+    parser.add_argument("--queues", help="amount of queues", required=True, type=int)
+    parser.add_argument("--quantum", help="time quantum of queue in seconds, seperated by whitespace", required=True, type=int, nargs="+")
+    parser.add_argument("--processlistfile", help="path to the process list file for import", required=True, type=str)
+    parser.add_argument("--logfile", help="path to the log file", required=True, type=str)
+    parser.add_argument("--outputfile", help="path to the output file of the simulation", required=True, type=str)
+    parser.add_argument("--outputimage", help="path to the output png image of the simulation", required=True, type=str)
 
     args = parser.parse_args()
 
