@@ -1,6 +1,10 @@
 # Imports
-import sys
 import argparse
+import pandas as pd
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+import datetime as dt
 
 # Task Class
 
@@ -151,6 +155,20 @@ def output_simulation():
     with open(OUTPUT_FILE, "+w") as file:
         file.write(text)
 
+def output_gantt_chart():
+    """
+    Saves the output of the simulation to a gantt chart
+    """
+    data = []
+
+    for task in FINISHED_TASKS:
+        data.append(dict(task=task.name, start=task.arrivaltime, runtime=task.real_runtime))
+
+    dataframe = pd.DataFrame(data)
+
+    plt.barh(y=dataframe['task'], left=dataframe['start'], width=dataframe['runtime'])
+    plt.savefig(OUTPUT_IMAGE)
+
 # Main method
 
 def main(args):
@@ -162,6 +180,7 @@ def main(args):
     global LOG_FILE
     global OUTPUT_FILE_FORMAT
     global OUTPUT_FILE
+    global OUTPUT_IMAGE
 
     TIME = 0
     FINISHED_TASKS = []
@@ -175,11 +194,13 @@ def main(args):
     LOG_FILE = args.logfile
     OUTPUT_FILE_FORMAT = args.outputformat
     OUTPUT_FILE = args.outputfile
+    OUTPUT_IMAGE = args.outputimage
 
     tasks = import_tasks_from_file(PROCESS_LIST_FILE)
 
     process_queues(tasks)
     output_simulation()
+    output_gantt_chart()
 
 
 # Entrypoint
@@ -193,6 +214,7 @@ if __name__ == "__main__":
     parser.add_argument("--logfile", help="path to the log file")
     parser.add_argument("--outputformat", help="output format (text, image)")
     parser.add_argument("--outputfile", help="path to the output file of the simulation")
+    parser.add_argument("--outputimage", help="path to the output png image of the simulation")
 
     args = parser.parse_args()
 
