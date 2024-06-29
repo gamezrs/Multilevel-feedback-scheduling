@@ -15,6 +15,9 @@ class Task:
         self.real_runtime = 0
         self.quantum = 0
 
+        self.quantum_exceedings = []
+        self.finishtime = 0
+
 # Logic
 
 def import_tasks_from_file(filepath: str):
@@ -93,6 +96,7 @@ def move_task_to_end_of_queue(queue_id: int):
 
     task = queue.pop(0) # Remove the first task from the queu
     task.quantum = 0 # Remove the time quantum
+    task.quantum_exceedings.append([TIME, queue_id, next_queue]) # Save info about the exceeding of the quantum time
 
     next_queue.append(task) # Readd the task to the end of the next queue
 
@@ -106,6 +110,7 @@ def remove_task_from_queue(queue_id: int):
     task = QUEUES[queue_id].pop(0) # Remove the task from the queue
     task.real_runtime = TIME - task.arrivaltime # Calculate the time that the process was running with waiting times
     task.waittime = task.real_runtime - task.needed_runtime # Calculate the time the process was waiting for the CPU
+    task.finishtime = TIME # Save the time when the process finished
     FINISHED_TASKS.append(task) # Add it to the list with finished tasks
     add_log(f"  Task {task.name} in Queue {queue_id} has finished!")
 
@@ -121,6 +126,30 @@ def add_log(text: str):
 
     with open(LOG_FILE, "+a") as file:
         file.write(text + "\n")
+
+
+def output_simulation():
+    """
+    Saves the output of the simulation to a text file
+    """
+    text = ""
+
+    average_real_runtime = 0
+    average_waittime = 0
+
+    for task in FINISHED_TASKS:
+        average_real_runtime += task.real_runtime
+        average_waittime += task.waittime
+
+        text = text + f"{task.name} finished after running for {task.real_runtime}s with a waiting time of {task.waittime}s\n"
+    
+    average_real_runtime = average_real_runtime / len(FINISHED_TASKS)
+    average_waittime = average_waittime / len(FINISHED_TASKS)
+
+    text = text + f"\n\nAverage runtime: {average_real_runtime}s\nAverage waittime: {average_waittime}s"
+
+    with open(OUTPUT_FILE, "+w") as file:
+        file.write(text)
 
 # Main method
 
@@ -150,6 +179,7 @@ def main(args):
     tasks = import_tasks_from_file(PROCESS_LIST_FILE)
 
     process_queues(tasks)
+    output_simulation()
 
 
 # Entrypoint
